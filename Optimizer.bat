@@ -24,6 +24,7 @@ if %errorLevel% neq 0 (
     pause
     exit
 )
+if not exist "%~dp0Undo" mkdir "%~dp0Undo"
 
 :: AUTOMATED/SILENT MODE
 if /i "%~1" equ "/clean" goto SILENT_CLEAN
@@ -52,7 +53,7 @@ echo.
 echo    [1] Optimize Network        - Improves network stability and lowers ping.
 echo    [2] System Cleaner          - Cleans temporary files, cache, and update leftovers.
 echo    [3] Extended Cleaner        - Cleans browser and Explorer cache.
-echo    [4] Junk Finder             - Removes deep logs and dumps.
+echo    [4] Junk Finder             - Removes deep logs and dumps from your system drive.
 echo    [5] Optimize DNS            - Switches to Cloudflare DNS for faster and more private browsing.
 echo    [6] Manage Services         - Disables unnecessary services like SysMain, Telemetry, and Xbox.
 echo    [7] Game Mode + GPU Priority- Optimizes system for gaming.
@@ -66,20 +67,20 @@ echo    [14] System Information     - Displays key system information.
 echo    [0] Exit
 echo.
 set /p choice="          Select an option: "
-if /i "%choice%"=="1" goto ANIM_NET
-if /i "%choice%"=="2" goto ANIM_CLEAN
-if /i "%choice%"=="3" goto ANIM_CLEANX
-if /i "%choice%"=="4" goto ANIM_JUNK
-if /i "%choice%"=="5" goto ANIM_DNS
-if /i "%choice%"=="6" goto ANIM_SERV
-if /i "%choice%"=="7" goto GAMEMODE
+if /i "%choice%"=="1" goto ACTION_NET
+if /i "%choice%"=="2" goto ACTION_CLEAN
+if /i "%choice%"=="3" goto ACTION_CLEANX
+if /i "%choice%"=="4" goto ACTION_JUNK
+if /i "%choice%"=="5" goto ACTION_DNS
+if /i "%choice%"=="6" goto ACTION_SERV
+if /i "%choice%"=="7" goto ACTION_GAMEMODE
 if /i "%choice%"=="8" goto ADVANCED_TWEAKS
-if /i "%choice%"=="9" goto ANIM_RSTNET
-if /i "%choice%"=="10" goto ANIM_INPUT
+if /i "%choice%"=="9" goto ACTION_RSTNET
+if /i "%choice%"=="10" goto ACTION_INPUT
 if /i "%choice%"=="11" goto BACKUP_RESTORE
 if /i "%choice%"=="12" goto HELP
 if /i "%choice%"=="13" goto UNDO_TWEAKS
-if /i "%choice%"=="14" goto SYSTEM_INFO
+if /i "%choice%"=="14" goto ACTION_SYSINFO
 if /i "%choice%"=="0" goto EXIT
 goto MENU
 
@@ -114,117 +115,66 @@ echo.
 endlocal
 exit /b
 
-:ANIM_NET
+:ACTION_NET
 cls
 call :LOG "Selected option: 1 - Optimize Network"
 call :progress "Optimizing Network"
-netsh int tcp set global autotuninglevel=normal
-if %errorlevel% neq 0 echo [ERROR] Failed to set autotuninglevel.
-netsh int tcp set global chimney=enabled
-if %errorlevel% neq 0 echo [ERROR] Failed to set chimney.
-netsh int tcp set global congestionprovider=ctcp
-if %errorlevel% neq 0 echo [ERROR] Failed to set congestionprovider.
-netsh int tcp set heuristics disabled
-if %errorlevel% neq 0 echo [ERROR] Failed to disable heuristics.
-netsh int tcp set global rss=enabled
-if %errorlevel% neq 0 echo [ERROR] Failed to enable rss.
-netsh int tcp set global fastopen=enabled
-if %errorlevel% neq 0 echo [ERROR] Failed to enable fastopen.
-netsh interface tcp set global timestamps=disabled
-if %errorlevel% neq 0 echo [ERROR] Failed to disable timestamps.
+call :SILENT_NET
 echo.
 echo [STATUS] Network optimization complete!
 pause
 goto MENU
 
-:ANIM_CLEAN
+:ACTION_CLEAN
 cls
 call :LOG "Selected option: 2 - System Cleaner"
 echo [WARNING] This will delete temporary files.
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
 call :progress "System Clean"
-del /q /f /s %TEMP%\*
-if %errorlevel% neq 0 echo [ERROR] Failed to delete files in %TEMP%.
-del /q /f /s C:\Windows\Temp\*
-if %errorlevel% neq 0 echo [ERROR] Failed to delete files in C:\Windows\Temp.
-del /q /f /s C:\Windows\Prefetch\*
-if %errorlevel% neq 0 echo [ERROR] Failed to delete files in C:\Windows\Prefetch.
-cleanmgr /sagerun:1
-if %errorlevel% neq 0 echo [ERROR] Failed to run cleanmgr.
-net stop wuauserv
-if %errorlevel% neq 0 echo [ERROR] Failed to stop wuauserv.
-del /q /f /s C:\Windows\SoftwareDistribution\Download\*
-if %errorlevel% neq 0 echo [ERROR] Failed to delete files in C:\Windows\SoftwareDistribution\Download.
-net start wuauserv
-if %errorlevel% neq 0 echo [ERROR] Failed to start wuauserv.
+call :SILENT_CLEAN
 echo.
 echo [STATUS] Junk cleaned.
 pause
 goto MENU
 
-:ANIM_CLEANX
+:ACTION_CLEANX
 cls
 call :LOG "Selected option: 3 - Extended Cleaner"
 echo [WARNING] This will delete browser and Explorer cache files.
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
 call :progress "Extended Cleaner"
-del /q /f /s "%LOCALAPPDATA%\Google\Chrome\User Data\Default\Cache\*"
-if %errorlevel% neq 0 echo [ERROR] Failed to delete Chrome cache.
-del /q /f /s "%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Cache\*"
-if %errorlevel% neq 0 echo [ERROR] Failed to delete Edge cache.
-del /q /f /s "%APPDATA%\Opera Software\Opera Stable\Cache\*"
-if %errorlevel% neq 0 echo [ERROR] Failed to delete Opera cache.
-del /q /f /s "%LOCALAPPDATA%\Microsoft\Windows\Explorer\thumbcache_*.db"
-if %errorlevel% neq 0 echo [ERROR] Failed to delete Explorer thumbcache.
+call :SILENT_CLEANX
 echo.
 echo [STATUS] Browser/Explorer cache cleaned.
 pause
 goto MENU
 
-:ANIM_JUNK
+:ACTION_JUNK
 cls
 call :LOG "Selected option: 4 - Junk Finder"
-echo [WARNING] This will delete log, dump, bak, old, and tmp files.
+echo [WARNING] This will delete log, dump, bak, old, and tmp files from your system drive.
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
 call :progress "Junk Finder"
-del /q /f /s "%SYSTEMDRIVE%\*.log"
-if %errorlevel% neq 0 echo [ERROR] Failed to delete log files.
-del /q /f /s "%SYSTEMDRIVE%\*.dmp"
-if %errorlevel% neq 0 echo [ERROR] Failed to delete dmp files.
-del /q /f /s "%SYSTEMDRIVE%\*.bak"
-if %errorlevel% neq 0 echo [ERROR] Failed to delete bak files.
-del /q /f /s "%SYSTEMDRIVE%\*.old"
-if %errorlevel% neq 0 echo [ERROR] Failed to delete old files.
-del /q /f /s "%USERPROFILE%\Downloads\*.tmp"
-if %errorlevel% neq 0 echo [ERROR] Failed to delete tmp files in Downloads.
+call :SILENT_JUNK
 echo.
 echo [STATUS] Deep junk removed.
 pause
 goto MENU
 
-:ANIM_DNS
+:ACTION_DNS
 cls
 call :LOG "Selected option: 5 - Optimize DNS"
 call :progress "Optimizing DNS"
-netsh interface ip set dns "Ethernet" static 1.1.1.1 primary
-if %errorlevel% neq 0 echo [ERROR] Failed to set primary DNS for Ethernet.
-netsh interface ip add dns "Ethernet" 1.0.0.1 index=2
-if %errorlevel% neq 0 echo [ERROR] Failed to set secondary DNS for Ethernet.
-netsh interface ip set dns "Wi-Fi" static 1.1.1.1 primary
-if %errorlevel% neq 0 echo [ERROR] Failed to set primary DNS for Wi-Fi.
-netsh interface ip add dns "Wi-Fi" 1.0.0.1 index=2
-if %errorlevel% neq 0 echo [ERROR] Failed to set secondary DNS for Wi-Fi.
-ipconfig /flushdns
-if %errorlevel% neq 0 echo [ERROR] Failed to flush DNS.
+call :SILENT_DNS
 echo.
 echo [STATUS] DNS optimization done.
 pause
 goto MENU
 
-:ANIM_SERV
+:ACTION_SERV
 cls
 call :LOG "Selected option: 6 - Manage Services"
 call :progress "Service Tuning"
@@ -283,31 +233,14 @@ if "%svch%"=="2" (
 )
 goto MENU
 
-:GAMEMODE
+:ACTION_GAMEMODE
 cls
 call :LOG "Selected option: 7 - Game Mode + GPU Priority"
 echo [WARNING] This will modify system settings for gaming optimization.
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
 call :progress "Gaming Optimization"
-:: Enable game mode (if applicable)
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\Power\User\Settings" /v GameMode /t REG_DWORD /d 1 /f
-if %errorlevel% neq 0 echo [ERROR] Failed to enable Game Mode.
-:: Boost GPU/CPU/RAM priority for games
-reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "GPU Priority" /t REG_DWORD /d 8 /f
-if %errorlevel% neq 0 echo [ERROR] Failed to set GPU Priority.
-reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "Priority" /t REG_DWORD /d 6 /f
-if %errorlevel% neq 0 echo [ERROR] Failed to set Priority.
-reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "Scheduling Category" /t REG_SZ /d High /f
-if %errorlevel% neq 0 echo [ERROR] Failed to set Scheduling Category.
-reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "SFIO Priority" /t REG_SZ /d High /f
-if %errorlevel% neq 0 echo [ERROR] Failed to set SFIO Priority.
-:: Disable background apps for performance
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" /v GlobalUserDisabled /t REG_DWORD /d 1 /f
-if %errorlevel% neq 0 echo [ERROR] Failed to disable background apps.
-:: Set power plan to "High performance"
-powercfg /setactive SCHEME_MIN
-if %errorlevel% neq 0 echo [ERROR] Failed to set power plan.
+call :SILENT_GAMEMODE
 echo.
 echo [STATUS] Game Mode, GPU/CPU priority and background apps optimized.
 pause
@@ -330,20 +263,19 @@ echo    [4] Clear Crash Dumps (Minidump)
 echo    [0] Back to Main Menu
 echo.
 set /p adv_choice="          Select a tweak to apply: "
-if /i "%adv_choice%"=="1" goto TWEAK_ADAPTIVESYNC
-if /i "%adv_choice%"=="2" goto TWEAK_LARGESYSTEMCACHE
-if /i "%adv_choice%"=="3" goto TWEAK_PREFETCHER
-if /i "%adv_choice%"=="4" goto TWEAK_MINIDUMP
+if /i "%adv_choice%"=="1" goto ACTION_ADAPTIVESYNC
+if /i "%adv_choice%"=="2" goto ACTION_LARGESYSTEMCACHE
+if /i "%adv_choice%"=="3" goto ACTION_PREFETCHER
+if /i "%adv_choice%"=="4" goto ACTION_MINIDUMP
 if /i "%adv_choice%"=="0" goto MENU
 goto ADVANCED_TWEAKS_MENU
 
-:TWEAK_ADAPTIVESYNC
+:ACTION_ADAPTIVESYNC
 cls
 call :LOG "Applying tweak: Enable AdaptiveSync"
 echo [WARNING] This will enable AdaptiveSync for DirectX.
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto ADVANCED_TWEAKS_MENU
-if not exist "%~dp0Undo" mkdir "%~dp0Undo"
 reg export "HKLM\SOFTWARE\Microsoft\DirectX" "%~dp0Undo\AdaptiveSync.reg" /y
 call :progress "Enabling AdaptiveSync"
 reg add "HKLM\SOFTWARE\Microsoft\DirectX" /v EnableAdaptiveSync /t REG_DWORD /d 1 /f
@@ -353,13 +285,12 @@ echo [STATUS] Tweak applied.
 pause
 goto ADVANCED_TWEAKS_MENU
 
-:TWEAK_LARGESYSTEMCACHE
+:ACTION_LARGESYSTEMCACHE
 cls
 call :LOG "Applying tweak: Enable Large System Cache"
 echo [WARNING] This will enable the Large System Cache.
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto ADVANCED_TWEAKS_MENU
-if not exist "%~dp0Undo" mkdir "%~dp0Undo"
 reg export "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" "%~dp0Undo\LargeSystemCache.reg" /y
 call :progress "Enabling Large System Cache"
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v LargeSystemCache /t REG_DWORD /d 1 /f
@@ -369,13 +300,12 @@ echo [STATUS] Tweak applied.
 pause
 goto ADVANCED_TWEAKS_MENU
 
-:TWEAK_PREFETCHER
+:ACTION_PREFETCHER
 cls
 call :LOG "Applying tweak: Disable Prefetcher and Superfetch"
 echo [WARNING] This will disable the Prefetcher and Superfetch services. Recommended for SSDs.
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto ADVANCED_TWEAKS_MENU
-if not exist "%~dp0Undo" mkdir "%~dp0Undo"
 reg export "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" "%~dp0Undo\Prefetcher.reg" /y
 call :progress "Disabling Prefetcher/Superfetch"
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v EnablePrefetcher /t REG_DWORD /d 0 /f
@@ -387,7 +317,7 @@ echo [STATUS] Tweak applied.
 pause
 goto ADVANCED_TWEAKS_MENU
 
-:TWEAK_MINIDUMP
+:ACTION_MINIDUMP
 cls
 call :LOG "Applying tweak: Clear Crash Dumps"
 echo [WARNING] This will delete all crash dump files (*.dmp) in the Minidump folder.
@@ -401,33 +331,20 @@ echo [STATUS] Tweak applied.
 pause
 goto ADVANCED_TWEAKS_MENU
 
-:ANIM_RSTNET
+:ACTION_RSTNET
 cls
 call :LOG "Selected option: 9 - Reset Network Adapter"
 echo [WARNING] This will reset your network adapter.
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
 call :progress "Network Reset"
-ipconfig /release
-if %errorlevel% neq 0 echo [ERROR] Failed to release IP address.
-ipconfig /renew
-if %errorlevel% neq 0 echo [ERROR] Failed to renew IP address.
-ipconfig /flushdns
-if %errorlevel% neq 0 echo [ERROR] Failed to flush DNS.
-netsh winsock reset
-if %errorlevel% neq 0 echo [ERROR] Failed to reset winsock.
-netsh int ip reset
-if %errorlevel% neq 0 echo [ERROR] Failed to reset IP.
-netsh interface ipv4 reset
-if %errorlevel% neq 0 echo [ERROR] Failed to reset IPv4.
-netsh interface ipv6 reset
-if %errorlevel% neq 0 echo [ERROR] Failed to reset IPv6.
+call :SILENT_RSTNET
 echo.
 echo [STATUS] Network reset done.
 pause
 goto MENU
 
-:ANIM_INPUT
+:ACTION_INPUT
 cls
 call :LOG "Selected option: 10 - Input Latency Tweaks"
 call :progress "Input Latency"
@@ -497,7 +414,7 @@ set /p br_choice="          Select an option: "
 if /i "%br_choice%"=="1" goto CREATE_RESTORE_POINT
 if /i "%br_choice%"=="2" goto BACKUP_REGISTRY
 if /i "%br_choice%"=="3" (
-    if exist "%~dp0RegistryBackup.reg" goto RESTORE_REGISTRY
+    if exist "%~dp0RegistryBackup_HKCU.reg" goto RESTORE_REGISTRY
 )
 if /i "%br_choice%"=="0" goto MENU
 goto BACKUP_RESTORE
@@ -587,7 +504,6 @@ goto MENU
 :UNDO_TWEAKS
 cls
 call :LOG "Selected option: 13 - Undo Tweaks"
-if not exist "%~dp0Undo" mkdir "%~dp0Undo"
 :UNDO_TWEAKS_MENU
 cls
 echo.
@@ -652,15 +568,10 @@ echo [STATUS] Tweak undone.
 pause
 goto UNDO_TWEAKS_MENU
 
-:SYSTEM_INFO
+:ACTION_SYSINFO
 cls
 call :LOG "Selected option: 14 - System Information"
-echo.
-echo            ╭────────────────────────────────────────────╮
-echo            │              SYSTEM INFORMATION            │
-echo            ╰────────────────────────────────────────────╯
-echo.
-systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Manufacturer" /C:"System Model" /C:"System Type" /C:"Total Physical Memory" /C:"Processor(s)"
+call :SILENT_SYSINFO
 echo.
 pause
 goto MENU
@@ -679,6 +590,17 @@ exit
 set "log_message=%~1"
 echo [%date% %time%] %log_message% >> "%~dp0Optimizer.log"
 exit /b
+
+:SILENT_NET
+call :LOG "Silent operation: Optimize Network"
+netsh int tcp set global autotuninglevel=normal
+netsh int tcp set global chimney=enabled
+netsh int tcp set global congestionprovider=ctcp
+netsh int tcp set heuristics disabled
+netsh int tcp set global rss=enabled
+netsh int tcp set global fastopen=enabled
+netsh interface tcp set global timestamps=disabled
+goto :EOF
 
 :SILENT_CLEAN
 call :LOG "Silent operation: System Cleaner"
@@ -725,7 +647,7 @@ reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProf
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "Scheduling Category" /t REG_SZ /d High /f
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "SFIO Priority" /t REG_SZ /d High /f
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" /v GlobalUserDisabled /t REG_DWORD /d 1 /f
-powercfg /setactive SCHEME_MIN
+powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
 goto :EOF
 
 :SILENT_RSTNET
@@ -741,6 +663,11 @@ goto :EOF
 
 :SILENT_SYSINFO
 call :LOG "Silent operation: System Information"
+echo.
+echo            ╭────────────────────────────────────────────╮
+echo            │              SYSTEM INFORMATION            │
+echo            ╰────────────────────────────────────────────╯
+echo.
 systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Manufacturer" /C:"System Model" /C:"System Type" /C:"Total Physical Memory" /C:"Processor(s)"
 goto :EOF
 

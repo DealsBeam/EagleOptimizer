@@ -1,9 +1,36 @@
 @echo off
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::
+::  Windows 11 PC Optimizer v3.3
+::
+::  This script provides a collection of tools to optimize Windows 11 performance,
+::  clean junk files, and apply various system tweaks.
+::
+::  Author: Your Name
+::  Version: 3.3
+::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:: -----------------------------------------------------------------------------
+::  Initial Setup
+:: -----------------------------------------------------------------------------
 chcp 65001 >nul
+title Windows 11 PC Optimizer v3.3
 mode con: cols=80 lines=33
 
-:: PRE-LOADER ANIMATION
-set "spinner=|/-\"
+:: Define ANSI color codes
+for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do (
+  set "ESC=%%b"
+)
+set "COLOR_RESET=%ESC%[0m"
+set "COLOR_RED=%ESC%[91m"
+set "COLOR_GREEN=%ESC%[92m"
+set "COLOR_YELLOW=%ESC%[93m"
+set "COLOR_CYAN=%ESC%[96m"
+
+:: -----------------------------------------------------------------------------
+::  Pre-loader and Admin Check
+:: -----------------------------------------------------------------------------
 cls
 echo.
 echo                                ╭─────────────────────────────╮
@@ -12,21 +39,23 @@ echo                                ╰─────────────�
 echo.
 set msg=Initializing...
 call :spinner "%msg%"
-echo                              [ OK ] Initialization Finished!
+call :_Print "green" "[ OK ]" "Initialization Finished!"
 timeout /t 1 >nul
 
 net session >nul 2>&1
 if %errorLevel% neq 0 (
-    echo =========================================================
-    echo                ADMINISTRATOR RIGHTS REQUIRED
-    echo  Run as administrator! Right-click -> "Run as administrator"
-    echo =========================================================
+    call :_Print "red" "[FATAL]" "This script requires administrator privileges."
+    echo.
+    echo %COLOR_YELLOW%Right-click the script and select "Run as administrator".%COLOR_RESET%
+    echo.
     pause
     exit
 )
 if not exist "%~dp0Undo" mkdir "%~dp0Undo"
 
-:: AUTOMATED/SILENT MODE
+:: -----------------------------------------------------------------------------
+::  Automated/Silent Mode Argument Parser
+:: -----------------------------------------------------------------------------
 if /i "%~1" equ "/clean" goto SILENT_CLEAN
 if /i "%~1" equ "/cleanx" goto SILENT_CLEANX
 if /i "%~1" equ "/junk" goto SILENT_JUNK
@@ -37,18 +66,20 @@ if /i "%~1" equ "/sysinfo" goto SILENT_SYSINFO
 if /i "%~1" neq "" (
     if /i "%~1" equ "/?" goto SILENT_HELP
     if /i "%~1" equ "/help" goto SILENT_HELP
-    echo [ERROR] Invalid argument: %1
+    call :_Print "red" "[ERROR]" "Invalid argument: %1"
     call :SILENT_HELP
     goto :EOF
 )
 
-:: MAIN MENU LOOP
+:: #############################################################################
+::  MAIN MENU
+:: #############################################################################
 :MENU
 cls
 echo.
-echo            ╭────────────────────────────────────────────╮
-echo            │    WINDOWS 11 PC OPTIMIZER v3.2            │
-echo            ╰────────────────────────────────────────────╯
+echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
+echo            %COLOR_CYAN%│    WINDOWS 11 PC OPTIMIZER v3.3            │%COLOR_RESET%
+echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
 echo.
 echo    [1] Optimize Network        - Improves network stability and lowers ping.
 echo    [2] System Cleaner          - Cleans temporary files, cache, and update leftovers.
@@ -84,6 +115,20 @@ if /i "%choice%"=="14" goto ACTION_SYSINFO
 if /i "%choice%"=="0" goto EXIT
 goto MENU
 
+:: #############################################################################
+::  HELPER SUBROUTINES
+:: #############################################################################
+
+:: -------- Color Printing Function
+:_Print
+set "color_name=%~1"
+set "prefix=%~2"
+set "message=%~3"
+setlocal enabledelayedexpansion
+echo !%color_name%!%prefix% %message%%COLOR_RESET%
+endlocal
+exit /b
+
 :: -------- Spinner Animation
 :spinner
 setlocal enabledelayedexpansion
@@ -115,52 +160,56 @@ echo.
 endlocal
 exit /b
 
+:: #############################################################################
+::  INTERACTIVE ACTIONS
+:: #############################################################################
+
 :ACTION_NET
 cls
 call :LOG "Selected option: 1 - Optimize Network"
 call :progress "Optimizing Network"
 call :SILENT_NET
 echo.
-echo [STATUS] Network optimization complete!
+call :_Print "green" "[STATUS]" "Network optimization complete!"
 pause
 goto MENU
 
 :ACTION_CLEAN
 cls
 call :LOG "Selected option: 2 - System Cleaner"
-echo [WARNING] This will delete temporary files.
+call :_Print "yellow" "[WARNING]" "This will delete temporary files."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
 call :progress "System Clean"
 call :SILENT_CLEAN
 echo.
-echo [STATUS] Junk cleaned.
+call :_Print "green" "[STATUS]" "Junk cleaned."
 pause
 goto MENU
 
 :ACTION_CLEANX
 cls
 call :LOG "Selected option: 3 - Extended Cleaner"
-echo [WARNING] This will delete browser and Explorer cache files.
+call :_Print "yellow" "[WARNING]" "This will delete browser and Explorer cache files."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
 call :progress "Extended Cleaner"
 call :SILENT_CLEANX
 echo.
-echo [STATUS] Browser/Explorer cache cleaned.
+call :_Print "green" "[STATUS]" "Browser/Explorer cache cleaned."
 pause
 goto MENU
 
 :ACTION_JUNK
 cls
 call :LOG "Selected option: 4 - Junk Finder"
-echo [WARNING] This will delete log, dump, bak, old, and tmp files from your system drive.
+call :_Print "yellow" "[WARNING]" "This will delete log, dump, bak, old, and tmp files from your system drive."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
 call :progress "Junk Finder"
 call :SILENT_JUNK
 echo.
-echo [STATUS] Deep junk removed.
+call :_Print "green" "[STATUS]" "Deep junk removed."
 pause
 goto MENU
 
@@ -170,7 +219,7 @@ call :LOG "Selected option: 5 - Optimize DNS"
 call :progress "Optimizing DNS"
 call :SILENT_DNS
 echo.
-echo [STATUS] DNS optimization done.
+call :_Print "green" "[STATUS]" "DNS optimization done."
 pause
 goto MENU
 
@@ -182,52 +231,52 @@ echo [1] Disable unnecessary services (SysMain, Telemetry, Xbox)
 echo [2] Restore default state
 set /p svch="Choose 1/2 or [Enter] to back: "
 if "%svch%"=="1" (
-    echo [WARNING] This will disable several Windows services.
+    call :_Print "yellow" "[WARNING]" "This will disable several Windows services."
     set /p confirm="Are you sure you want to continue? (Y/N): "
     if /i not "%confirm%"=="Y" goto MENU
     sc config "SysMain" start=disabled & sc stop "SysMain"
-    if %errorlevel% neq 0 echo [ERROR] Failed to disable SysMain.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable SysMain."
     sc config "DiagTrack" start=disabled & sc stop "DiagTrack"
-    if %errorlevel% neq 0 echo [ERROR] Failed to disable DiagTrack.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable DiagTrack."
     sc config "dmwappushservice" start=disabled & sc stop "dmwappushservice"
-    if %errorlevel% neq 0 echo [ERROR] Failed to disable dmwappushservice.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable dmwappushservice."
     sc config "XblAuthManager" start=disabled & sc stop "XblAuthManager"
-    if %errorlevel% neq 0 echo [ERROR] Failed to disable XblAuthManager.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable XblAuthManager."
     sc config "XblGameSave" start=disabled & sc stop "XblGameSave"
-    if %errorlevel% neq 0 echo [ERROR] Failed to disable XblGameSave.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable XblGameSave."
     sc config "XboxNetApiSvc" start=disabled & sc stop "XboxNetApiSvc"
-    if %errorlevel% neq 0 echo [ERROR] Failed to disable XboxNetApiSvc.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable XboxNetApiSvc."
     reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to set AllowTelemetry policy.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to set AllowTelemetry policy."
     reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to set AllowTelemetry policy.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to set AllowTelemetry policy."
     echo.
-    echo [STATUS] Services disabled. Restart recommended!
+    call :_Print "green" "[STATUS]" "Services disabled. Restart recommended!"
     pause
     goto MENU
 )
 if "%svch%"=="2" (
-    echo [WARNING] This will restore default service configurations.
+    call :_Print "yellow" "[WARNING]" "This will restore default service configurations."
     set /p confirm="Are you sure you want to continue? (Y/N): "
     if /i not "%confirm%"=="Y" goto MENU
     sc config "SysMain" start=auto & sc start "SysMain"
-    if %errorlevel% neq 0 echo [ERROR] Failed to restore SysMain.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore SysMain."
     sc config "DiagTrack" start=auto & sc start "DiagTrack"
-    if %errorlevel% neq 0 echo [ERROR] Failed to restore DiagTrack.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore DiagTrack."
     sc config "dmwappushservice" start=manual
-    if %errorlevel% neq 0 echo [ERROR] Failed to restore dmwappushservice.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore dmwappushservice."
     sc config "XblAuthManager" start=demand
-    if %errorlevel% neq 0 echo [ERROR] Failed to restore XblAuthManager.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore XblAuthManager."
     sc config "XblGameSave" start=demand
-    if %errorlevel% neq 0 echo [ERROR] Failed to restore XblGameSave.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore XblGameSave."
     sc config "XboxNetApiSvc" start=demand
-    if %errorlevel% neq 0 echo [ERROR] Failed to restore XboxNetApiSvc.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore XboxNetApiSvc."
     reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to delete AllowTelemetry policy.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete AllowTelemetry policy."
     reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /v AllowTelemetry /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to delete AllowTelemetry policy.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete AllowTelemetry policy."
     echo.
-    echo [STATUS] Services restored.
+    call :_Print "green" "[STATUS]" "Services restored."
     pause
     goto MENU
 )
@@ -236,13 +285,13 @@ goto MENU
 :ACTION_GAMEMODE
 cls
 call :LOG "Selected option: 7 - Game Mode + GPU Priority"
-echo [WARNING] This will modify system settings for gaming optimization.
+call :_Print "yellow" "[WARNING]" "This will modify system settings for gaming optimization."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
 call :progress "Gaming Optimization"
 call :SILENT_GAMEMODE
 echo.
-echo [STATUS] Game Mode, GPU/CPU priority and background apps optimized.
+call :_Print "green" "[STATUS]" "Game Mode, GPU/CPU priority and background apps optimized."
 pause
 goto MENU
 
@@ -252,9 +301,9 @@ call :LOG "Selected option: 8 - Advanced Windows Tweaks"
 :ADVANCED_TWEAKS_MENU
 cls
 echo.
-echo            ╭────────────────────────────────────────────╮
-echo            │           ADVANCED WINDOWS TWEAKS          │
-echo            ╰────────────────────────────────────────────╯
+echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
+echo            %COLOR_CYAN%│           ADVANCED WINDOWS TWEAKS          │%COLOR_RESET%
+echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
 echo.
 echo    [1] Enable AdaptiveSync for DirectX
 echo    [2] Enable Large System Cache
@@ -273,74 +322,74 @@ goto ADVANCED_TWEAKS_MENU
 :ACTION_ADAPTIVESYNC
 cls
 call :LOG "Applying tweak: Enable AdaptiveSync"
-echo [WARNING] This will enable AdaptiveSync for DirectX.
+call :_Print "yellow" "[WARNING]" "This will enable AdaptiveSync for DirectX."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto ADVANCED_TWEAKS_MENU
 reg export "HKLM\SOFTWARE\Microsoft\DirectX" "%~dp0Undo\AdaptiveSync.reg" /y
 call :progress "Enabling AdaptiveSync"
 reg add "HKLM\SOFTWARE\Microsoft\DirectX" /v EnableAdaptiveSync /t REG_DWORD /d 1 /f
-if %errorlevel% neq 0 echo [ERROR] Failed to enable AdaptiveSync.
+if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to enable AdaptiveSync."
 echo.
-echo [STATUS] Tweak applied.
+call :_Print "green" "[STATUS]" "Tweak applied."
 pause
 goto ADVANCED_TWEAKS_MENU
 
 :ACTION_LARGESYSTEMCACHE
 cls
 call :LOG "Applying tweak: Enable Large System Cache"
-echo [WARNING] This will enable the Large System Cache.
+call :_Print "yellow" "[WARNING]" "This will enable the Large System Cache."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto ADVANCED_TWEAKS_MENU
 reg export "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" "%~dp0Undo\LargeSystemCache.reg" /y
 call :progress "Enabling Large System Cache"
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v LargeSystemCache /t REG_DWORD /d 1 /f
-if %errorlevel% neq 0 echo [ERROR] Failed to enable LargeSystemCache.
+if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to enable LargeSystemCache."
 echo.
-echo [STATUS] Tweak applied.
+call :_Print "green" "[STATUS]" "Tweak applied."
 pause
 goto ADVANCED_TWEAKS_MENU
 
 :ACTION_PREFETCHER
 cls
 call :LOG "Applying tweak: Disable Prefetcher and Superfetch"
-echo [WARNING] This will disable the Prefetcher and Superfetch services. Recommended for SSDs.
+call :_Print "yellow" "[WARNING]" "This will disable the Prefetcher and Superfetch services. Recommended for SSDs."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto ADVANCED_TWEAKS_MENU
 reg export "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" "%~dp0Undo\Prefetcher.reg" /y
 call :progress "Disabling Prefetcher/Superfetch"
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v EnablePrefetcher /t REG_DWORD /d 0 /f
-if %errorlevel% neq 0 echo [ERROR] Failed to disable Prefetcher.
+if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable Prefetcher."
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v EnableSuperfetch /t REG_DWORD /d 0 /f
-if %errorlevel% neq 0 echo [ERROR] Failed to disable Superfetch.
+if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable Superfetch."
 echo.
-echo [STATUS] Tweak applied.
+call :_Print "green" "[STATUS]" "Tweak applied."
 pause
 goto ADVANCED_TWEAKS_MENU
 
 :ACTION_MINIDUMP
 cls
 call :LOG "Applying tweak: Clear Crash Dumps"
-echo [WARNING] This will delete all crash dump files (*.dmp) in the Minidump folder.
+call :_Print "yellow" "[WARNING]" "This will delete all crash dump files (*.dmp) in the Minidump folder."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto ADVANCED_TWEAKS_MENU
 call :progress "Clearing Crash Dumps"
 del /q /f /s "%SystemDrive%\Windows\Minidump\*"
-if %errorlevel% neq 0 echo [ERROR] Failed to delete minidump files.
+if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete minidump files."
 echo.
-echo [STATUS] Tweak applied.
+call :_Print "green" "[STATUS]" "Tweak applied."
 pause
 goto ADVANCED_TWEAKS_MENU
 
 :ACTION_RSTNET
 cls
 call :LOG "Selected option: 9 - Reset Network Adapter"
-echo [WARNING] This will reset your network adapter.
+call :_Print "yellow" "[WARNING]" "This will reset your network adapter."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
 call :progress "Network Reset"
 call :SILENT_RSTNET
 echo.
-echo [STATUS] Network reset done.
+call :_Print "green" "[STATUS]" "Network reset done."
 pause
 goto MENU
 
@@ -352,44 +401,44 @@ echo [1] Apply lowest latency
 echo [2] Restore defaults
 set /p inlat="Choose 1/2 [Enter]-menu: "
 if "%inlat%"=="1" (
-    echo [WARNING] This will modify mouse and keyboard settings.
+    call :_Print "yellow" "[WARNING]" "This will modify mouse and keyboard settings."
     set /p confirm="Are you sure you want to continue? (Y/N): "
     if /i not "%confirm%"=="Y" goto MENU
     reg add "HKCU\Control Panel\Mouse" /v MouseSensitivity /t REG_SZ /d 10 /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to set MouseSensitivity.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to set MouseSensitivity."
     reg add "HKCU\Control Panel\Mouse" /v MouseSpeed /t REG_SZ /d 0 /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to set MouseSpeed.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to set MouseSpeed."
     reg add "HKCU\Control Panel\Mouse" /v MouseThreshold1 /t REG_SZ /d 0 /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to set MouseThreshold1.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to set MouseThreshold1."
     reg add "HKCU\Control Panel\Mouse" /v MouseThreshold2 /t REG_SZ /d 0 /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to set MouseThreshold2.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to set MouseThreshold2."
     reg add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v MouseDataQueueSize /t REG_DWORD /d 20 /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to set MouseDataQueueSize.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to set MouseDataQueueSize."
     reg add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v KeyboardDataQueueSize /t REG_DWORD /d 20 /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to set KeyboardDataQueueSize.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to set KeyboardDataQueueSize."
     echo.
-    echo [STATUS] Input latency tweaks applied. Restart!
+    call :_Print "green" "[STATUS]" "Input latency tweaks applied. Restart!"
     pause
     goto MENU
 )
 if "%inlat%"=="2" (
-    echo [WARNING] This will restore default mouse and keyboard settings.
+    call :_Print "yellow" "[WARNING]" "This will restore default mouse and keyboard settings."
     set /p confirm="Are you sure you want to continue? (Y/N): "
     if /i not "%confirm%"=="Y" goto MENU
     reg delete "HKCU\Control Panel\Mouse" /v MouseSensitivity /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to delete MouseSensitivity.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete MouseSensitivity."
     reg delete "HKCU\Control Panel\Mouse" /v MouseSpeed /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to delete MouseSpeed.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete MouseSpeed."
     reg delete "HKCU\Control Panel\Mouse" /v MouseThreshold1 /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to delete MouseThreshold1.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete MouseThreshold1."
     reg delete "HKCU\Control Panel\Mouse" /v MouseThreshold2 /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to delete MouseThreshold2.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete MouseThreshold2."
     reg delete "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v MouseDataQueueSize /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to delete MouseDataQueueSize.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete MouseDataQueueSize."
     reg delete "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v KeyboardDataQueueSize /f
-    if %errorlevel% neq 0 echo [ERROR] Failed to delete KeyboardDataQueueSize.
+    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete KeyboardDataQueueSize."
     echo.
-    echo [STATUS] Input latency values restored.
+    call :_Print "green" "[STATUS]" "Input latency values restored."
     pause
     goto MENU
 )
@@ -399,9 +448,9 @@ goto MENU
 cls
 call :LOG "Selected option: 11 - Backup and Restore"
 echo.
-echo            ╭────────────────────────────────────────────╮
-echo            │             BACKUP AND RESTORE             │
-echo            ╰────────────────────────────────────────────╯
+echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
+echo            %COLOR_CYAN%│             BACKUP AND RESTORE             │%COLOR_RESET%
+echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
 echo.
 echo    [1] Create System Restore Point
 echo    [2] Backup Registry
@@ -424,7 +473,7 @@ cls
 call :progress "Creating System Restore Point"
 powershell.exe -ExecutionPolicy Bypass -Command "Checkpoint-Computer -Description 'Optimizer Restore Point' -RestorePointType 'MODIFY_SETTINGS'"
 echo.
-echo [STATUS] System restore point created successfully.
+call :_Print "green" "[STATUS]" "System restore point created successfully."
 pause
 goto BACKUP_RESTORE
 
@@ -434,7 +483,7 @@ call :progress "Backing up Registry"
 reg export HKCU "%~dp0RegistryBackup_HKCU.reg" /y
 reg export HKLM "%~dp0RegistryBackup_HKLM.reg" /y
 echo.
-echo [STATUS] Registry backup created successfully.
+call :_Print "green" "[STATUS]" "Registry backup created successfully."
 pause
 goto BACKUP_RESTORE
 
@@ -444,7 +493,7 @@ call :progress "Restoring Registry"
 reg import "%~dp0RegistryBackup_HKCU.reg"
 reg import "%~dp0RegistryBackup_HKLM.reg"
 echo.
-echo [STATUS] Registry restored successfully. Restart recommended!
+call :_Print "green" "[STATUS]" "Registry restored successfully. Restart recommended!"
 pause
 goto BACKUP_RESTORE
 
@@ -452,50 +501,50 @@ goto BACKUP_RESTORE
 cls
 call :LOG "Selected option: 12 - Help / Information"
 echo.
-echo            ╭────────────────────────────────────────────╮
-echo            │              HELP / INFORMATION            │
-echo            ╰────────────────────────────────────────────╯
+echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
+echo            %COLOR_CYAN%│              HELP / INFORMATION            │%COLOR_RESET%
+echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
 echo.
-echo    [1] Optimize Network:
+echo    %COLOR_CYAN%[1] Optimize Network:%COLOR_RESET%
 echo        - Sets TCP autotuning to normal, enables chimney offload, and uses CTCP congestion provider.
 echo        - Disables heuristics, enables RSS, and fast open.
 echo.
-echo    [2] System Cleaner:
+echo    %COLOR_CYAN%[2] System Cleaner:%COLOR_RESET%
 echo        - Deletes files from TEMP, C:\Windows\Temp, and Prefetch folders.
 echo        - Runs the built-in Disk Cleanup utility.
 echo        - Clears the Windows Update cache.
 echo.
-echo    [3] Extended Cleaner:
+echo    %COLOR_CYAN%[3] Extended Cleaner:%COLOR_RESET%
 echo        - Deletes cache files from Chrome, Edge, and Opera.
 echo        - Deletes Explorer's thumbnail cache.
 echo.
-echo    [4] Junk Finder:
+echo    %COLOR_CYAN%[4] Junk Finder:%COLOR_RESET%
 echo        - Deletes .log, .dmp, .bak, .old, and .tmp files from the system drive and user's Downloads folder.
 echo.
-echo    [5] Optimize DNS:
+echo    %COLOR_CYAN%[5] Optimize DNS:%COLOR_RESET%
 echo        - Sets the DNS to Cloudflare's 1.1.1.1 and 1.0.0.1 for both Ethernet and Wi-Fi.
 echo        - Flushes the DNS cache.
 echo.
-echo    [6] Manage Services:
+echo    %COLOR_CYAN%[6] Manage Services:%COLOR_RESET%
 echo        - Disables SysMain, DiagTrack, dmwappushservice, and Xbox services.
 echo        - Disables telemetry through the registry.
 echo.
-echo    [7] Game Mode + GPU Priority:
+echo    %COLOR_CYAN%[7] Game Mode + GPU Priority:%COLOR_RESET%
 echo        - Enables Game Mode, boosts GPU and CPU priority for games.
 echo        - Disables background apps and sets the power plan to "High performance".
 echo.
-echo    [8] Advanced Windows Tweaks:
+echo    %COLOR_CYAN%[8] Advanced Windows Tweaks:%COLOR_RESET%
 echo        - Enables AdaptiveSync for DirectX, enables LargeSystemCache.
 echo        - Disables prefetcher and superfetch.
 echo        - Clears minidump files.
 echo.
-echo    [9] Reset Network Adapter:
+echo    %COLOR_CYAN%[9] Reset Network Adapter:%COLOR_RESET%
 echo        - Releases and renews the IP address, flushes DNS, and resets Winsock and IP.
 echo.
-echo    [10] Input Latency Tweaks:
+echo    %COLOR_CYAN%[10] Input Latency Tweaks:%COLOR_RESET%
 echo         - Adjusts mouse and keyboard settings to reduce input latency.
 echo.
-echo    [11] Backup and Restore:
+echo    %COLOR_CYAN%[11] Backup and Restore:%COLOR_RESET%
 echo         - Creates a system restore point and backs up the registry.
 echo.
 pause
@@ -507,9 +556,9 @@ call :LOG "Selected option: 13 - Undo Tweaks"
 :UNDO_TWEAKS_MENU
 cls
 echo.
-echo            ╭────────────────────────────────────────────╮
-echo            │                   UNDO TWEAKS              │
-echo            ╰────────────────────────────────────────────╯
+echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
+echo            %COLOR_CYAN%│                   UNDO TWEAKS              │%COLOR_RESET%
+echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
 echo.
 if exist "%~dp0Undo\AdaptiveSync.reg" echo    [1] Undo AdaptiveSync
 if exist "%~dp0Undo\LargeSystemCache.reg" echo    [2] Undo Large System Cache
@@ -526,45 +575,45 @@ goto UNDO_TWEAKS_MENU
 :UNDO_ADAPTIVESYNC
 cls
 call :LOG "Undoing tweak: AdaptiveSync"
-echo [WARNING] This will restore the default AdaptiveSync setting.
+call :_Print "yellow" "[WARNING]" "This will restore the default AdaptiveSync setting."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto UNDO_TWEAKS_MENU
 call :progress "Restoring AdaptiveSync"
 reg import "%~dp0Undo\AdaptiveSync.reg"
-if %errorlevel% neq 0 echo [ERROR] Failed to restore AdaptiveSync.
+if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore AdaptiveSync."
 del "%~dp0Undo\AdaptiveSync.reg"
 echo.
-echo [STATUS] Tweak undone.
+call :_Print "green" "[STATUS]" "Tweak undone."
 pause
 goto UNDO_TWEAKS_MENU
 
 :UNDO_LARGESYSTEMCACHE
 cls
 call :LOG "Undoing tweak: Large System Cache"
-echo [WARNING] This will restore the default Large System Cache setting.
+call :_Print "yellow" "[WARNING]" "This will restore the default Large System Cache setting."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto UNDO_TWEAKS_MENU
 call :progress "Restoring Large System Cache"
 reg import "%~dp0Undo\LargeSystemCache.reg"
-if %errorlevel% neq 0 echo [ERROR] Failed to restore Large System Cache.
+if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore Large System Cache."
 del "%~dp0Undo\LargeSystemCache.reg"
 echo.
-echo [STATUS] Tweak undone.
+call :_Print "green" "[STATUS]" "Tweak undone."
 pause
 goto UNDO_TWEAKS_MENU
 
 :UNDO_PREFETCHER
 cls
 call :LOG "Undoing tweak: Prefetcher and Superfetch"
-echo [WARNING] This will restore the default Prefetcher and Superfetch settings.
+call :_Print "yellow" "[WARNING]" "This will restore the default Prefetcher and Superfetch settings."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto UNDO_TWEAKS_MENU
 call :progress "Restoring Prefetcher/Superfetch"
 reg import "%~dp0Undo\Prefetcher.reg"
-if %errorlevel% neq 0 echo [ERROR] Failed to restore Prefetcher.
+if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore Prefetcher."
 del "%~dp0Undo\Prefetcher.reg"
 echo.
-echo [STATUS] Tweak undone.
+call :_Print "green" "[STATUS]" "Tweak undone."
 pause
 goto UNDO_TWEAKS_MENU
 
@@ -579,17 +628,15 @@ goto MENU
 :EXIT
 cls
 echo.
-echo                        [ Thank you for using! ]
+call :_Print "cyan" "[ EXIT ]" "Thank you for using the optimizer!"
 echo      If you tweaked settings, please restart your computer.
 echo.
 pause
 exit
 
-:: -------- Logging Function
-:LOG
-set "log_message=%~1"
-echo [%date% %time%] %log_message% >> "%~dp0Optimizer.log"
-exit /b
+:: #############################################################################
+::  SILENT MODE ACTIONS
+:: #############################################################################
 
 :SILENT_NET
 call :LOG "Silent operation: Optimize Network"
@@ -664,9 +711,9 @@ goto :EOF
 :SILENT_SYSINFO
 call :LOG "Silent operation: System Information"
 echo.
-echo            ╭────────────────────────────────────────────╮
-echo            │              SYSTEM INFORMATION            │
-echo            ╰────────────────────────────────────────────╯
+echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
+echo            %COLOR_CYAN%│              SYSTEM INFORMATION            │%COLOR_RESET%
+echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
 echo.
 systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Manufacturer" /C:"System Model" /C:"System Type" /C:"Total Physical Memory" /C:"Processor(s)"
 goto :EOF
@@ -686,3 +733,9 @@ echo   /sysinfo    - System Information
 echo   /? or /help - Display this help message
 echo.
 goto :EOF
+
+:: -------- Logging Function
+:LOG
+set "log_message=%~1"
+echo [%date% %time%] %log_message% >> "%~dp0Optimizer.log"
+exit /b

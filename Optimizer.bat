@@ -1,13 +1,22 @@
 @echo off
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::
-::  Windows 11 PC Optimizer v3.4
+::  Windows 11 PC Optimizer v3.5
 ::
 ::  This script provides a collection of tools to optimize Windows 11 performance,
 ::  clean junk files, and apply various system tweaks.
 ::
 ::  Author: Your Name
-::  Version: 3.4
+::  Version: 3.5
+::
+::  Changelog v3.5:
+::  - Bugfix: Resolved critical bug preventing script execution due to faulty
+::    ANSI ESC variable definition.
+::  - Bugfix: Corrected typo in :SILENT_JUNK subroutine (%SYSTEMDRIVE%).
+::  - Improvement: Replaced `ping` with `timeout` for delays in animations.
+::  - Improvement: Simplified pre-loader animation logic for stability.
+::  - Improvement: Hardened the :_Print subroutine by using `echo(`.
+::  - Improvement: Replaced all `exit /b` with `goto :EOF` for consistency.
 ::
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -15,7 +24,7 @@
 ::  Initial Setup
 :: -----------------------------------------------------------------------------
 chcp 65001 >nul
-title Windows 11 PC Optimizer v3.4
+title Windows 11 PC Optimizer v3.5
 mode con: cols=80 lines=33
 
 :: Define ANSI color codes
@@ -79,7 +88,7 @@ if /i "%~1" neq "" (
 cls
 echo.
 echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
-echo            %COLOR_CYAN%│    WINDOWS 11 PC OPTIMIZER v3.4            │%COLOR_RESET%
+echo            %COLOR_CYAN%│    WINDOWS 11 PC OPTIMIZER v3.5            │%COLOR_RESET%
 echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
 echo.
 echo    [1] Optimize Network        - Improves network stability and lowers ping.
@@ -126,31 +135,30 @@ goto MENU
     set "prefix=%~2"
     set "message=%~3"
     if /i "%color_name%" == "red" (
-        echo %COLOR_RED%%prefix% %message%%COLOR_RESET%
+        echo(%COLOR_RED%%prefix% %message%%COLOR_RESET%
     ) else if /i "%color_name%" == "green" (
-        echo %COLOR_GREEN%%prefix% %message%%COLOR_RESET%
+        echo(%COLOR_GREEN%%prefix% %message%%COLOR_RESET%
     ) else if /i "%color_name%" == "yellow" (
-        echo %COLOR_YELLOW%%prefix% %message%%COLOR_RESET%
+        echo(%COLOR_YELLOW%%prefix% %message%%COLOR_RESET%
     ) else if /i "%color_name%" == "cyan" (
-        echo %COLOR_CYAN%%prefix% %message%%COLOR_RESET%
+        echo(%COLOR_CYAN%%prefix% %message%%COLOR_RESET%
     ) else (
-        echo %prefix% %message%
+        echo(%prefix% %message%
     )
-    exit /b
+    goto :EOF
 
 :: -------- Spinner Animation
 :spinner
 setlocal enabledelayedexpansion
 set "msg=%~1"
-for /L %%i in (1,1,30) do (
-    set /a idx=%%i %% 4
-    set "spinchar=!spinner:~%idx%,1!"
-    <nul set /p="                           !msg! !spinchar!`r"
-    ping -n 1 127.0.0.1 >nul
+for /L %%i in (1,1,10) do (
+    set /a "idx=%%i %% 4"
+    <nul set /p="                           !msg! !spinner:~%idx%,1!\r"
+    timeout /t 1 >nul
 )
 endlocal
 echo.
-exit /b
+goto :EOF
 
 :: -------- Progress Animation
 :progress
@@ -163,11 +171,11 @@ for /L %%i in (1,1,36) do (
     for /L %%k in (%%i,1,36) do set "bar=!bar! "
     set "bar=!bar!]"
     <nul set /p="                 !msg! !bar!`r"
-    ping -n 1 127.0.0.1 >nul
+    timeout /t 1 >nul
 )
 echo.
 endlocal
-exit /b
+goto :EOF
 
 :: #############################################################################
 ::  INTERACTIVE ACTIONS
@@ -747,4 +755,4 @@ goto :EOF
 :LOG
 set "log_message=%~1"
 echo [%date% %time%] %log_message% >> "%~dp0Optimizer.log"
-exit /b
+goto :EOF

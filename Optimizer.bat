@@ -1,13 +1,13 @@
 @echo off
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::
-::  Windows 11 PC Optimizer v3.3
+::  Windows 11 PC Optimizer v3.4
 ::
 ::  This script provides a collection of tools to optimize Windows 11 performance,
 ::  clean junk files, and apply various system tweaks.
 ::
 ::  Author: Your Name
-::  Version: 3.3
+::  Version: 3.4
 ::
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -15,18 +15,19 @@
 ::  Initial Setup
 :: -----------------------------------------------------------------------------
 chcp 65001 >nul
-title Windows 11 PC Optimizer v3.3
+title Windows 11 PC Optimizer v3.4
 mode con: cols=80 lines=33
 
 :: Define ANSI color codes
-for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do (
-  set "ESC=%%b"
-)
+(echo prompt $E^| cmd) > "%TEMP%\get_esc.cmd"
+for /F "delims=" %%a in ('"%TEMP%\get_esc.cmd"') do set "ESC=%%a"
+del "%TEMP%\get_esc.cmd" >nul 2>&1
 set "COLOR_RESET=%ESC%[0m"
 set "COLOR_RED=%ESC%[91m"
 set "COLOR_GREEN=%ESC%[92m"
 set "COLOR_YELLOW=%ESC%[93m"
 set "COLOR_CYAN=%ESC%[96m"
+set "spinner=|/-\"
 
 :: -----------------------------------------------------------------------------
 ::  Pre-loader and Admin Check
@@ -78,7 +79,7 @@ if /i "%~1" neq "" (
 cls
 echo.
 echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
-echo            %COLOR_CYAN%│    WINDOWS 11 PC OPTIMIZER v3.3            │%COLOR_RESET%
+echo            %COLOR_CYAN%│    WINDOWS 11 PC OPTIMIZER v3.4            │%COLOR_RESET%
 echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
 echo.
 echo    [1] Optimize Network        - Improves network stability and lowers ping.
@@ -121,13 +122,21 @@ goto MENU
 
 :: -------- Color Printing Function
 :_Print
-set "color_name=%~1"
-set "prefix=%~2"
-set "message=%~3"
-setlocal enabledelayedexpansion
-echo !%color_name%!%prefix% %message%%COLOR_RESET%
-endlocal
-exit /b
+    set "color_name=%~1"
+    set "prefix=%~2"
+    set "message=%~3"
+    if /i "%color_name%" == "red" (
+        echo %COLOR_RED%%prefix% %message%%COLOR_RESET%
+    ) else if /i "%color_name%" == "green" (
+        echo %COLOR_GREEN%%prefix% %message%%COLOR_RESET%
+    ) else if /i "%color_name%" == "yellow" (
+        echo %COLOR_YELLOW%%prefix% %message%%COLOR_RESET%
+    ) else if /i "%color_name%" == "cyan" (
+        echo %COLOR_CYAN%%prefix% %message%%COLOR_RESET%
+    ) else (
+        echo %prefix% %message%
+    )
+    exit /b
 
 :: -------- Spinner Animation
 :spinner
@@ -655,9 +664,9 @@ del /q /f /s %TEMP%\*
 del /q /f /s C:\Windows\Temp\*
 del /q /f /s C:\Windows\Prefetch\*
 cleanmgr /sagerun:1
-net stop wuauserv
+net stop wuauserv 2>nul
 del /q /f /s C:\Windows\SoftwareDistribution\Download\*
-net start wuauserv
+net start wuauserv 2>nul
 goto :EOF
 
 :SILENT_CLEANX

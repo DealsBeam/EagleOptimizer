@@ -43,9 +43,9 @@ set "spinner=|/-\"
 :: -----------------------------------------------------------------------------
 cls
 echo.
-echo                                ╭─────────────────────────────╮
-echo                                │  Windows 11 PC Optimizer   │
-echo                                ╰─────────────────────────────╯
+echo                                +-----------------------------+
+echo                                |  Windows 11 PC Optimizer    |
+echo                                +-----------------------------+
 echo.
 set msg=Initializing...
 call :spinner "%msg%"
@@ -87,9 +87,9 @@ if /i "%~1" neq "" (
 :MENU
 cls
 echo.
-echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
-echo            %COLOR_CYAN%│    WINDOWS 11 PC OPTIMIZER v3.5            │%COLOR_RESET%
-echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
+echo            %COLOR_CYAN%| |    WINDOWS 11 PC OPTIMIZER v3.5            | |%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
 echo.
 echo    [1] Optimize Network        - Improves network stability and lowers ping.
 echo    [2] System Cleaner          - Cleans temporary files, cache, and update leftovers.
@@ -318,9 +318,9 @@ call :LOG "Selected option: 8 - Advanced Windows Tweaks"
 :ADVANCED_TWEAKS_MENU
 cls
 echo.
-echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
-echo            %COLOR_CYAN%│           ADVANCED WINDOWS TWEAKS          │%COLOR_RESET%
-echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
+echo            %COLOR_CYAN%| |           ADVANCED WINDOWS TWEAKS          | |%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
 echo.
 echo    [1] Enable AdaptiveSync for DirectX
 echo    [2] Enable Large System Cache
@@ -465,9 +465,9 @@ goto MENU
 cls
 call :LOG "Selected option: 11 - Backup and Restore"
 echo.
-echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
-echo            %COLOR_CYAN%│             BACKUP AND RESTORE             │%COLOR_RESET%
-echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
+echo            %COLOR_CYAN%| |             BACKUP AND RESTORE             | |%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
 echo.
 echo    [1] Create System Restore Point
 echo    [2] Backup Registry
@@ -518,9 +518,9 @@ goto BACKUP_RESTORE
 cls
 call :LOG "Selected option: 12 - Help / Information"
 echo.
-echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
-echo            %COLOR_CYAN%│              HELP / INFORMATION            │%COLOR_RESET%
-echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
+echo            %COLOR_CYAN%| |              HELP / INFORMATION            | |%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
 echo.
 echo    %COLOR_CYAN%[1] Optimize Network:%COLOR_RESET%
 echo        - Sets TCP autotuning to normal, enables chimney offload, and uses CTCP congestion provider.
@@ -573,9 +573,9 @@ call :LOG "Selected option: 13 - Undo Tweaks"
 :UNDO_TWEAKS_MENU
 cls
 echo.
-echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
-echo            %COLOR_CYAN%│                   UNDO TWEAKS              │%COLOR_RESET%
-echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
+echo            %COLOR_CYAN%| |                   UNDO TWEAKS              | |%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
 echo.
 if exist "%~dp0Undo\AdaptiveSync.reg" echo    [1] Undo AdaptiveSync
 if exist "%~dp0Undo\LargeSystemCache.reg" echo    [2] Undo Large System Cache
@@ -728,9 +728,9 @@ goto :EOF
 :SILENT_SYSINFO
 call :LOG "Silent operation: System Information"
 echo.
-echo            %COLOR_CYAN%╭────────────────────────────────────────────╮%COLOR_RESET%
-echo            %COLOR_CYAN%│              SYSTEM INFORMATION            │%COLOR_RESET%
-echo            %COLOR_CYAN%╰────────────────────────────────────────────╯%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
+echo            %COLOR_CYAN%| |              SYSTEM INFORMATION            | |%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
 echo.
 systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Manufacturer" /C:"System Model" /C:"System Type" /C:"Total Physical Memory" /C:"Processor(s)"
 goto :EOF

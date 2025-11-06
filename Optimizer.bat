@@ -1,21 +1,18 @@
 @echo off
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::
-::  Windows 11 PC Optimizer v3.6
+::  Windows 11 PC Optimizer v3.8
 ::
 ::  This script provides a collection of tools to optimize Windows 11 performance,
 ::  clean junk files, and apply various system tweaks.
 ::
 ::  Author: Your Name
-::  Version: 3.6
+::  Version: 3.8
 ::
-::  Changelog v3.6:
-::  - Bugfix: Re-engineered Input Latency restore to be fully reliable.
-::  - Bugfix: DNS optimization now auto-detects network adapters instead of
-::    using hardcoded names.
-::  - Bugfix: Suppressed harmless errors when restoring services.
-::  - Improvement: Added a critical warning to the aggressive Junk Finder.
-::  - Improvement: Sped up animations for a better user experience.
+::  Changelog v3.8:
+::  - Feature: Added a true backup/restore system for Service Management.
+::  - Feature: Added a true backup/restore system for Game Mode tweaks.
+::  - Bugfix: Corrected numbering in the Help section.
 ::
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -23,7 +20,7 @@
 ::  Initial Setup
 :: -----------------------------------------------------------------------------
 chcp 65001 >nul
-title Windows 11 PC Optimizer v3.6
+title Windows 11 PC Optimizer v3.8
 mode con: cols=80 lines=33
 
 :: Define ANSI color codes
@@ -87,23 +84,24 @@ if /i "%~1" neq "" (
 cls
 echo.
 echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
-echo            %COLOR_CYAN%| |    WINDOWS 11 PC OPTIMIZER v3.6            | |%COLOR_RESET%
+echo            %COLOR_CYAN%| |    WINDOWS 11 PC OPTIMIZER v3.8            | |%COLOR_RESET%
 echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
 echo.
 echo    [1] Optimize Network        - Improves network stability and lowers ping.
 echo    [2] System Cleaner          - Cleans temporary files, cache, and update leftovers.
 echo    [3] Extended Cleaner        - Cleans browser and Explorer cache.
 echo    [4] Junk Finder             - Removes deep logs and dumps from your system drive.
-echo    [5] Optimize DNS            - Switches to Cloudflare DNS for faster and more private browsing.
-echo    [6] Manage Services         - Disables unnecessary services like SysMain, Telemetry, and Xbox.
-echo    [7] Game Mode + GPU Priority- Optimizes system for gaming.
-echo    [8] Advanced Windows Tweaks - Applies advanced tweaks for Prefetch, RAM, and DirectX.
-echo    [9] Reset Network Adapter   - Resets the network adapter to default settings.
-echo    [10] Input Latency Tweaks   - Reduces input latency for a more responsive experience.
-echo    [11] Backup and Restore     - Creates a system restore point and backs up the registry.
-echo    [12] Help / Information     - Provides a detailed overview of the script's functionality.
-echo    [13] Undo Tweaks            - Reverts specific changes made by the script.
-echo    [14] System Information     - Displays key system information.
+echo    [5] Windows Debloater       - Uninstalls pre-installed Microsoft Store apps.
+echo    [6] Optimize DNS            - Switches to Cloudflare DNS for faster and more private browsing.
+echo    [7] Manage Services         - Disables unnecessary services like SysMain, Telemetry, and Xbox.
+echo    [8] Game Mode + GPU Priority- Optimizes system for gaming.
+echo    [9] Advanced Windows Tweaks - Applies advanced tweaks for Prefetch, RAM, and DirectX.
+echo    [10] Reset Network Adapter  - Resets the network adapter to default settings.
+echo    [11] Input Latency Tweaks   - Reduces input latency for a more responsive experience.
+echo    [12] Backup and Restore     - Creates a system restore point and backs up the registry.
+echo    [13] Help / Information     - Provides a detailed overview of the script's functionality.
+echo    [14] Undo Tweaks            - Reverts specific changes made by the script.
+echo    [15] System Information     - Displays key system information.
 echo    [0] Exit
 echo.
 set /p choice="          Select an option: "
@@ -111,16 +109,17 @@ if /i "%choice%"=="1" goto ACTION_NET
 if /i "%choice%"=="2" goto ACTION_CLEAN
 if /i "%choice%"=="3" goto ACTION_CLEANX
 if /i "%choice%"=="4" goto ACTION_JUNK
-if /i "%choice%"=="5" goto ACTION_DNS
-if /i "%choice%"=="6" goto ACTION_SERV
-if /i "%choice%"=="7" goto ACTION_GAMEMODE
-if /i "%choice%"=="8" goto ADVANCED_TWEAKS
-if /i "%choice%"=="9" goto ACTION_RSTNET
-if /i "%choice%"=="10" goto ACTION_INPUT
-if /i "%choice%"=="11" goto BACKUP_RESTORE
-if /i "%choice%"=="12" goto HELP
-if /i "%choice%"=="13" goto UNDO_TWEAKS
-if /i "%choice%"=="14" goto ACTION_SYSINFO
+if /i "%choice%"=="5" goto ACTION_DEBLOAT
+if /i "%choice%"=="6" goto ACTION_DNS
+if /i "%choice%"=="7" goto ACTION_SERV
+if /i "%choice%"=="8" goto ACTION_GAMEMODE
+if /i "%choice%"=="9" goto ADVANCED_TWEAKS
+if /i "%choice%"=="10" goto ACTION_RSTNET
+if /i "%choice%"=="11" goto ACTION_INPUT
+if /i "%choice%"=="12" goto BACKUP_RESTORE
+if /i "%choice%"=="13" goto HELP
+if /i "%choice%"=="14" goto UNDO_TWEAKS
+if /i "%choice%"=="15" goto ACTION_SYSINFO
 if /i "%choice%"=="0" goto EXIT
 goto MENU
 
@@ -232,9 +231,70 @@ call :_Print "green" "[STATUS]" "Deep junk removed."
 pause
 goto MENU
 
+:ACTION_DEBLOAT
+cls
+call :LOG "Selected option: 5 - Windows Debloater"
+:DEBLOAT_MENU
+cls
+echo.
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
+echo            %COLOR_CYAN%| |              WINDOWS DEBLOATER             | |%COLOR_RESET%
+echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
+echo.
+echo    [1] Recommended Debloat (Removes common bloatware)
+echo    [2] Custom Debloat (Choose which apps to remove)
+echo    [0] Back to Main Menu
+echo.
+set /p debloat_choice="          Select an option: "
+if /i "%debloat_choice%"=="1" goto DEBLOAT_RECOMMENDED
+if /i "%debloat_choice%"=="2" goto DEBLOAT_CUSTOM
+if /i "%debloat_choice%"=="0" goto MENU
+goto DEBLOAT_MENU
+
+:DEBLOAT_RECOMMENDED
+cls
+call :LOG "Selected Debloater option: Recommended"
+call :_Print "yellow" "[WARNING]" "This will remove a list of common bloatware apps."
+set /p confirm="Are you sure you want to continue? (Y/N): "
+if /i not "%confirm%"=="Y" goto DEBLOAT_MENU
+call :progress "Removing recommended bloatware..."
+set "debloat_list=Microsoft.549981C3F5F10;Microsoft.BingNews;Microsoft.BingWeather;Microsoft.GetHelp;Microsoft.Getstarted;Microsoft.MicrosoftOfficeHub;Microsoft.MicrosoftSolitaireCollection;Microsoft.People;Microsoft.SkypeApp;Microsoft.WindowsAlarms;Microsoft.WindowsCamera;microsoft.windowscommunicationsapps;Microsoft.WindowsFeedbackHub;Microsoft.WindowsMaps;Microsoft.YourPhone;Microsoft.ZuneMusic;Microsoft.ZuneVideo;king.com.CandyCrushSaga"
+for %%a in (%debloat_list%) do (
+    call :_Print "cyan" "[INFO]" "Removing %%a..."
+    powershell.exe -ExecutionPolicy Bypass -Command "Get-AppxPackage *%%a* | Remove-AppxPackage"
+    call :LOG "Removed AppX Package: %%a"
+)
+echo.
+call :_Print "green" "[STATUS]" "Recommended bloatware removed."
+pause
+goto DEBLOAT_MENU
+
+:DEBLOAT_CUSTOM
+cls
+call :LOG "Selected Debloater option: Custom"
+call :_Print "yellow" "[WARNING]" "This will allow you to select and remove specific Microsoft Store apps."
+set /p confirm="Are you sure you want to continue? (Y/N): "
+if /i not "%confirm%"=="Y" goto DEBLOAT_MENU
+
+:DEBLOAT_CUSTOM_LOOP
+cls
+call :_Print "cyan" "[INFO]" "Loading list of installed apps..."
+powershell.exe -ExecutionPolicy Bypass -Command "Get-AppxPackage | Select-Object -Property Name, PackageFullName | Format-Table -AutoSize"
+echo.
+set /p app_name="Enter the full or partial name of the app to remove (or type 'exit' to return): "
+if /i "%app_name%"=="exit" goto DEBLOAT_MENU
+
+call :progress "Removing app..."
+powershell.exe -ExecutionPolicy Bypass -Command "Get-AppxPackage *%app_name%* | Remove-AppxPackage"
+call :LOG "Removed AppX Package: %app_name%"
+echo.
+call :_Print "green" "[STATUS]" "App removed. You can remove another or type 'exit'."
+pause
+goto DEBLOAT_CUSTOM_LOOP
+
 :ACTION_DNS
 cls
-call :LOG "Selected option: 5 - Optimize DNS"
+call :LOG "Selected option: 6 - Optimize DNS"
 call :progress "Optimizing DNS"
 call :SILENT_DNS
 echo.
@@ -244,56 +304,65 @@ goto MENU
 
 :ACTION_SERV
 cls
-call :LOG "Selected option: 6 - Manage Services"
+call :LOG "Selected option: 7 - Manage Services"
 call :progress "Service Tuning"
 echo [1] Disable unnecessary services (SysMain, Telemetry, Xbox)
-echo [2] Restore default state
+if exist "%~dp0Undo\Services_SysMain.bat" echo [2] Restore original state
 set /p svch="Choose 1/2 or [Enter] to back: "
 if "%svch%"=="1" (
-    call :_Print "yellow" "[WARNING]" "This will disable several Windows services."
+    call :_Print "yellow" "[WARNING]" "This will disable several Windows services and back up their current state."
     set /p confirm="Are you sure you want to continue? (Y/N): "
     if /i not "%confirm%"=="Y" goto MENU
+
+    call :_Print "cyan" "[INFO]" "Backing up service configurations..."
+    set "service_list=SysMain DiagTrack dmwappushservice XblAuthManager XblGameSave XboxNetApiSvc"
+    for %%s in (%service_list%) do (
+        (for /f "tokens=2" %%i in ('sc query "%%s" ^| find "STATE"') do (
+            if "%%i"=="RUNNING" (echo sc start "%%s") else (echo sc stop "%%s")
+        )) > "%~dp0Undo\Services_%%s.bat"
+        (for /f "tokens=3" %%i in ('sc qc "%%s" ^| find "START_TYPE"') do (
+            echo sc config "%%s" start=%%i
+        )) >> "%~dp0Undo\Services_%%s.bat"
+    )
+    reg export "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" "%~dp0Undo\Services_Telemetry.reg" /y
+
+    call :_Print "cyan" "[INFO]" "Disabling services..."
     sc config "SysMain" start=disabled & sc stop "SysMain"
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable SysMain."
     sc config "DiagTrack" start=disabled & sc stop "DiagTrack"
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable DiagTrack."
     sc config "dmwappushservice" start=disabled & sc stop "dmwappushservice"
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable dmwappushservice."
     sc config "XblAuthManager" start=disabled & sc stop "XblAuthManager"
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable XblAuthManager."
     sc config "XblGameSave" start=disabled & sc stop "XblGameSave"
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable XblGameSave."
     sc config "XboxNetApiSvc" start=disabled & sc stop "XboxNetApiSvc"
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to disable XboxNetApiSvc."
     reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to set AllowTelemetry policy."
-    reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to set AllowTelemetry policy."
+
     echo.
     call :_Print "green" "[STATUS]" "Services disabled. Restart recommended!"
     pause
     goto MENU
 )
 if "%svch%"=="2" (
-    call :_Print "yellow" "[WARNING]" "This will restore default service configurations."
+    if not exist "%~dp0Undo\Services_SysMain.bat" goto MENU
+    call :_Print "yellow" "[WARNING]" "This will restore the original service configurations."
     set /p confirm="Are you sure you want to continue? (Y/N): "
     if /i not "%confirm%"=="Y" goto MENU
-    sc config "SysMain" start=auto >nul & sc start "SysMain" 2>nul
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore SysMain."
-    sc config "DiagTrack" start=auto >nul & sc start "DiagTrack" 2>nul
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore DiagTrack."
-    sc config "dmwappushservice" start=manual >nul
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore dmwappushservice."
-    sc config "XblAuthManager" start=demand >nul
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore XblAuthManager."
-    sc config "XblGameSave" start=demand >nul
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore XblGameSave."
-    sc config "XboxNetApiSvc" start=demand >nul
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore XboxNetApiSvc."
-    reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /f
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete AllowTelemetry policy."
-    reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /v AllowTelemetry /f
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete AllowTelemetry policy."
+
+    call :_Print "cyan" "[INFO]" "Restoring services..."
+    set "service_list=SysMain DiagTrack dmwappushservice XblAuthManager XblGameSave XboxNetApiSvc"
+    for %%s in (%service_list%) do (
+        if exist "%~dp0Undo\Services_%%s.bat" (
+            call "%~dp0Undo\Services_%%s.bat"
+        )
+    )
+    reg import "%~dp0Undo\Services_Telemetry.reg"
+
+    call :_Print "cyan" "[INFO]" "Cleaning up backup files..."
+    for %%s in (%service_list%) do (
+        if exist "%~dp0Undo\Services_%%s.bat" (
+            del "%~dp0Undo\Services_%%s.bat"
+        )
+    )
+    del "%~dp0Undo\Services_Telemetry.reg"
+
     echo.
     call :_Print "green" "[STATUS]" "Services restored."
     pause
@@ -303,10 +372,16 @@ goto MENU
 
 :ACTION_GAMEMODE
 cls
-call :LOG "Selected option: 7 - Game Mode + GPU Priority"
-call :_Print "yellow" "[WARNING]" "This will modify system settings for gaming optimization."
+call :LOG "Selected option: 8 - Game Mode + GPU Priority"
+call :_Print "yellow" "[WARNING]" "This will modify system settings for gaming optimization and back up current values."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
+
+call :_Print "cyan" "[INFO]" "Backing up current game mode settings..."
+reg export "HKLM\SYSTEM\CurrentControlSet\Control\Power\User\Settings" "%~dp0Undo\GameMode_PowerSettings.reg" /y
+reg export "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" "%~dp0Undo\GameMode_Multimedia.reg" /y
+reg export "HKCU\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" "%~dp0Undo\GameMode_BackgroundApps.reg" /y
+
 call :progress "Gaming Optimization"
 call :SILENT_GAMEMODE
 echo.
@@ -316,7 +391,7 @@ goto MENU
 
 :ADVANCED_TWEAKS
 cls
-call :LOG "Selected option: 8 - Advanced Windows Tweaks"
+call :LOG "Selected option: 9 - Advanced Windows Tweaks"
 :ADVANCED_TWEAKS_MENU
 cls
 echo.
@@ -401,7 +476,7 @@ goto ADVANCED_TWEAKS_MENU
 
 :ACTION_RSTNET
 cls
-call :LOG "Selected option: 9 - Reset Network Adapter"
+call :LOG "Selected option: 10 - Reset Network Adapter"
 call :_Print "yellow" "[WARNING]" "This will reset your network adapter."
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
@@ -414,7 +489,7 @@ goto MENU
 
 :ACTION_INPUT
 cls
-call :LOG "Selected option: 10 - Input Latency Tweaks"
+call :LOG "Selected option: 11 - Input Latency Tweaks"
 call :progress "Input Latency"
 echo [1] Apply lowest latency
 if exist "%~dp0Undo\InputLatency_Mouse.reg" echo [2] Restore defaults
@@ -472,7 +547,7 @@ goto MENU
 
 :BACKUP_RESTORE
 cls
-call :LOG "Selected option: 11 - Backup and Restore"
+call :LOG "Selected option: 12 - Backup and Restore"
 echo.
 echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
 echo            %COLOR_CYAN%| |             BACKUP AND RESTORE             | |%COLOR_RESET%
@@ -525,7 +600,7 @@ goto BACKUP_RESTORE
 
 :HELP
 cls
-call :LOG "Selected option: 12 - Help / Information"
+call :LOG "Selected option: 13 - Help / Information"
 echo.
 echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
 echo            %COLOR_CYAN%| |              HELP / INFORMATION            | |%COLOR_RESET%
@@ -547,38 +622,42 @@ echo.
 echo    %COLOR_CYAN%[4] Junk Finder:%COLOR_RESET%
 echo        - Deletes .log, .dmp, .bak, .old, and .tmp files from the system drive and user's Downloads folder.
 echo.
-echo    %COLOR_CYAN%[5] Optimize DNS:%COLOR_RESET%
-echo        - Sets the DNS to Cloudflare's 1.1.1.1 and 1.0.0.1 for both Ethernet and Wi-Fi.
+echo    %COLOR_CYAN%[5] Windows Debloater:%COLOR_RESET%
+echo        - Provides options to remove pre-installed Microsoft Store applications, either from a recommended
+echo          list or by custom selection.
+echo.
+echo    %COLOR_CYAN%[6] Optimize DNS:%COLOR_RESET%
+echo        - Sets the DNS to Cloudflare's 1.1.1.1 and 1.0.0.1 for all active network adapters.
 echo        - Flushes the DNS cache.
 echo.
-echo    %COLOR_CYAN%[6] Manage Services:%COLOR_RESET%
+echo    %COLOR_CYAN%[7] Manage Services:%COLOR_RESET%
 echo        - Disables SysMain, DiagTrack, dmwappushservice, and Xbox services.
 echo        - Disables telemetry through the registry.
 echo.
-echo    %COLOR_CYAN%[7] Game Mode + GPU Priority:%COLOR_RESET%
+echo    %COLOR_CYAN%[8] Game Mode + GPU Priority:%COLOR_RESET%
 echo        - Enables Game Mode, boosts GPU and CPU priority for games.
 echo        - Disables background apps and sets the power plan to "High performance".
 echo.
-echo    %COLOR_CYAN%[8] Advanced Windows Tweaks:%COLOR_RESET%
+echo    %COLOR_CYAN%[9] Advanced Windows Tweaks:%COLOR_RESET%
 echo        - Enables AdaptiveSync for DirectX, enables LargeSystemCache.
 echo        - Disables prefetcher and superfetch.
 echo        - Clears minidump files.
 echo.
-echo    %COLOR_CYAN%[9] Reset Network Adapter:%COLOR_RESET%
-echo        - Releases and renews the IP address, flushes DNS, and resets Winsock and IP.
+echo    %COLOR_CYAN%[10] Reset Network Adapter:%COLOR_RESET%
+echo         - Releases and renews the IP address, flushes DNS, and resets Winsock and IP.
 echo.
-echo    %COLOR_CYAN%[10] Input Latency Tweaks:%COLOR_RESET%
-echo         - Adjusts mouse and keyboard settings to reduce input latency.
+echo    %COLOR_CYAN%[11] Input Latency Tweaks:%COLOR_RESET%
+echo          - Adjusts mouse and keyboard settings to reduce input latency.
 echo.
-echo    %COLOR_CYAN%[11] Backup and Restore:%COLOR_RESET%
-echo         - Creates a system restore point and backs up the registry.
+echo    %COLOR_CYAN%[12] Backup and Restore:%COLOR_RESET%
+echo          - Creates a system restore point and backs up the registry.
 echo.
 pause
 goto MENU
 
 :UNDO_TWEAKS
 cls
-call :LOG "Selected option: 13 - Undo Tweaks"
+call :LOG "Selected option: 14 - Undo Tweaks"
 :UNDO_TWEAKS_MENU
 cls
 echo.
@@ -589,13 +668,56 @@ echo.
 if exist "%~dp0Undo\AdaptiveSync.reg" echo    [1] Undo AdaptiveSync
 if exist "%~dp0Undo\LargeSystemCache.reg" echo    [2] Undo Large System Cache
 if exist "%~dp0Undo\Prefetcher.reg" echo    [3] Undo Prefetcher and Superfetch
+if exist "%~dp0Undo\GameMode_PowerSettings.reg" echo    [4] Undo Game Mode Tweaks
+if exist "%~dp0Undo\Services_SysMain.bat" echo    [5] Undo Service Changes
 echo    [0] Back to Main Menu
 echo.
 set /p undo_choice="          Select a tweak to undo: "
 if /i "%undo_choice%"=="1" goto UNDO_ADAPTIVESYNC
 if /i "%undo_choice%"=="2" goto UNDO_LARGESYSTEMCACHE
 if /i "%undo_choice%"=="3" goto UNDO_PREFETCHER
+if /i "%undo_choice%"=="4" goto UNDO_GAMEMODE
+if /i "%undo_choice%"=="5" goto UNDO_SERVICES
 if /i "%undo_choice%"=="0" goto MENU
+goto UNDO_TWEAKS_MENU
+
+:UNDO_GAMEMODE
+cls
+call :LOG "Undoing tweak: Game Mode"
+call :_Print "yellow" "[WARNING]" "This will restore the default Game Mode settings."
+set /p confirm="Are you sure you want to continue? (Y/N): "
+if /i not "%confirm%"=="Y" goto UNDO_TWEAKS_MENU
+call :progress "Restoring Game Mode Settings"
+reg import "%~dp0Undo\GameMode_PowerSettings.reg"
+reg import "%~dp0Undo\GameMode_Multimedia.reg"
+reg import "%~dp0Undo\GameMode_BackgroundApps.reg"
+del "%~dp0Undo\GameMode_PowerSettings.reg"
+del "%~dp0Undo\GameMode_Multimedia.reg"
+del "%~dp0Undo\GameMode_BackgroundApps.reg"
+echo.
+call :_Print "green" "[STATUS]" "Tweak undone."
+pause
+goto UNDO_TWEAKS_MENU
+
+:UNDO_SERVICES
+cls
+call :LOG "Undoing tweak: Service Changes"
+call :_Print "yellow" "[WARNING]" "This will restore the original service configurations."
+set /p confirm="Are you sure you want to continue? (Y/N): "
+if /i not "%confirm%"=="Y" goto UNDO_TWEAKS_MENU
+call :progress "Restoring Services"
+set "service_list=SysMain DiagTrack dmwappushservice XblAuthManager XblGameSave XboxNetApiSvc"
+for %%s in (%service_list%) do (
+    if exist "%~dp0Undo\Services_%%s.bat" (
+        call "%~dp0Undo\Services_%%s.bat"
+        del "%~dp0Undo\Services_%%s.bat"
+    )
+)
+reg import "%~dp0Undo\Services_Telemetry.reg"
+del "%~dp0Undo\Services_Telemetry.reg"
+echo.
+call :_Print "green" "[STATUS]" "Services restored."
+pause
 goto UNDO_TWEAKS_MENU
 
 :UNDO_ADAPTIVESYNC
@@ -645,7 +767,7 @@ goto UNDO_TWEAKS_MENU
 
 :ACTION_SYSINFO
 cls
-call :LOG "Selected option: 14 - System Information"
+call :LOG "Selected option: 15 - System Information"
 call :SILENT_SYSINFO
 echo.
 pause

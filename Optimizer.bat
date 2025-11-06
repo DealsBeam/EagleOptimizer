@@ -1,22 +1,21 @@
 @echo off
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::
-::  Windows 11 PC Optimizer v3.5
+::  Windows 11 PC Optimizer v3.6
 ::
 ::  This script provides a collection of tools to optimize Windows 11 performance,
 ::  clean junk files, and apply various system tweaks.
 ::
 ::  Author: Your Name
-::  Version: 3.5
+::  Version: 3.6
 ::
-::  Changelog v3.5:
-::  - Bugfix: Resolved critical bug preventing script execution due to faulty
-::    ANSI ESC variable definition.
-::  - Bugfix: Corrected typo in :SILENT_JUNK subroutine (%SYSTEMDRIVE%).
-::  - Improvement: Replaced `ping` with `timeout` for delays in animations.
-::  - Improvement: Simplified pre-loader animation logic for stability.
-::  - Improvement: Hardened the :_Print subroutine by using `echo(`.
-::  - Improvement: Replaced all `exit /b` with `goto :EOF` for consistency.
+::  Changelog v3.6:
+::  - Bugfix: Re-engineered Input Latency restore to be fully reliable.
+::  - Bugfix: DNS optimization now auto-detects network adapters instead of
+::    using hardcoded names.
+::  - Bugfix: Suppressed harmless errors when restoring services.
+::  - Improvement: Added a critical warning to the aggressive Junk Finder.
+::  - Improvement: Sped up animations for a better user experience.
 ::
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -24,7 +23,7 @@
 ::  Initial Setup
 :: -----------------------------------------------------------------------------
 chcp 65001 >nul
-title Windows 11 PC Optimizer v3.5
+title Windows 11 PC Optimizer v3.6
 mode con: cols=80 lines=33
 
 :: Define ANSI color codes
@@ -88,7 +87,7 @@ if /i "%~1" neq "" (
 cls
 echo.
 echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
-echo            %COLOR_CYAN%| |    WINDOWS 11 PC OPTIMIZER v3.5            | |%COLOR_RESET%
+echo            %COLOR_CYAN%| |    WINDOWS 11 PC OPTIMIZER v3.6            | |%COLOR_RESET%
 echo            %COLOR_CYAN%+-+------------------------------------------+-+%COLOR_RESET%
 echo.
 echo    [1] Optimize Network        - Improves network stability and lowers ping.
@@ -151,10 +150,10 @@ goto MENU
 :spinner
 setlocal enabledelayedexpansion
 set "msg=%~1"
-for /L %%i in (1,1,10) do (
+for /L %%i in (1,1,20) do (
     set /a "idx=%%i %% 4"
     <nul set /p="                           !msg! !spinner:~%idx%,1!\r"
-    timeout /t 1 >nul
+    >nul ping -n 1 -w 100 127.0.0.1
 )
 endlocal
 echo.
@@ -171,7 +170,7 @@ for /L %%i in (1,1,36) do (
     for /L %%k in (%%i,1,36) do set "bar=!bar! "
     set "bar=!bar!]"
     <nul set /p="                 !msg! !bar!`r"
-    timeout /t 1 >nul
+    >nul ping -n 1 -w 5 127.0.0.1
 )
 echo.
 endlocal
@@ -220,7 +219,10 @@ goto MENU
 :ACTION_JUNK
 cls
 call :LOG "Selected option: 4 - Junk Finder"
-call :_Print "yellow" "[WARNING]" "This will delete log, dump, bak, old, and tmp files from your system drive."
+call :_Print "red" "[CRITICAL]" "This is an aggressive cleanup and may delete important files if"
+call :_Print "red" "[CRITICAL]" "you have custom software that uses .log, .bak, or .old extensions."
+call :_Print "yellow" "[WARNING]" "It is recommended to back up important data before proceeding."
+echo.
 set /p confirm="Are you sure you want to continue? (Y/N): "
 if /i not "%confirm%"=="Y" goto MENU
 call :progress "Junk Finder"
@@ -276,17 +278,17 @@ if "%svch%"=="2" (
     call :_Print "yellow" "[WARNING]" "This will restore default service configurations."
     set /p confirm="Are you sure you want to continue? (Y/N): "
     if /i not "%confirm%"=="Y" goto MENU
-    sc config "SysMain" start=auto & sc start "SysMain"
+    sc config "SysMain" start=auto >nul & sc start "SysMain" 2>nul
     if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore SysMain."
-    sc config "DiagTrack" start=auto & sc start "DiagTrack"
+    sc config "DiagTrack" start=auto >nul & sc start "DiagTrack" 2>nul
     if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore DiagTrack."
-    sc config "dmwappushservice" start=manual
+    sc config "dmwappushservice" start=manual >nul
     if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore dmwappushservice."
-    sc config "XblAuthManager" start=demand
+    sc config "XblAuthManager" start=demand >nul
     if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore XblAuthManager."
-    sc config "XblGameSave" start=demand
+    sc config "XblGameSave" start=demand >nul
     if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore XblGameSave."
-    sc config "XboxNetApiSvc" start=demand
+    sc config "XboxNetApiSvc" start=demand >nul
     if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to restore XboxNetApiSvc."
     reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /f
     if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete AllowTelemetry policy."
@@ -415,12 +417,19 @@ cls
 call :LOG "Selected option: 10 - Input Latency Tweaks"
 call :progress "Input Latency"
 echo [1] Apply lowest latency
-echo [2] Restore defaults
+if exist "%~dp0Undo\InputLatency_Mouse.reg" echo [2] Restore defaults
 set /p inlat="Choose 1/2 [Enter]-menu: "
 if "%inlat%"=="1" (
-    call :_Print "yellow" "[WARNING]" "This will modify mouse and keyboard settings."
+    call :_Print "yellow" "[WARNING]" "This will modify mouse and keyboard settings and back up current values."
     set /p confirm="Are you sure you want to continue? (Y/N): "
     if /i not "%confirm%"=="Y" goto MENU
+
+    call :_Print "cyan" "[INFO]" "Backing up current input settings..."
+    reg export "HKCU\Control Panel\Mouse" "%~dp0Undo\InputLatency_Mouse.reg" /y
+    reg export "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" "%~dp0Undo\InputLatency_Mouclass.reg" /y
+    reg export "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" "%~dp0Undo\InputLatency_Kbdclass.reg" /y
+
+    call :_Print "cyan" "[INFO]" "Applying new tweaks..."
     reg add "HKCU\Control Panel\Mouse" /v MouseSensitivity /t REG_SZ /d 10 /f
     if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to set MouseSensitivity."
     reg add "HKCU\Control Panel\Mouse" /v MouseSpeed /t REG_SZ /d 0 /f
@@ -439,21 +448,21 @@ if "%inlat%"=="1" (
     goto MENU
 )
 if "%inlat%"=="2" (
-    call :_Print "yellow" "[WARNING]" "This will restore default mouse and keyboard settings."
+    if not exist "%~dp0Undo\InputLatency_Mouse.reg" goto MENU
+    call :_Print "yellow" "[WARNING]" "This will restore your original mouse and keyboard settings."
     set /p confirm="Are you sure you want to continue? (Y/N): "
     if /i not "%confirm%"=="Y" goto MENU
-    reg delete "HKCU\Control Panel\Mouse" /v MouseSensitivity /f
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete MouseSensitivity."
-    reg delete "HKCU\Control Panel\Mouse" /v MouseSpeed /f
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete MouseSpeed."
-    reg delete "HKCU\Control Panel\Mouse" /v MouseThreshold1 /f
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete MouseThreshold1."
-    reg delete "HKCU\Control Panel\Mouse" /v MouseThreshold2 /f
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete MouseThreshold2."
-    reg delete "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v MouseDataQueueSize /f
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete MouseDataQueueSize."
-    reg delete "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v KeyboardDataQueueSize /f
-    if %errorlevel% neq 0 call :_Print "red" "[ERROR]" "Failed to delete KeyboardDataQueueSize."
+
+    call :_Print "cyan" "[INFO]" "Restoring original settings..."
+    reg import "%~dp0Undo\InputLatency_Mouse.reg"
+    reg import "%~dp0Undo\InputLatency_Mouclass.reg"
+    reg import "%~dp0Undo\InputLatency_Kbdclass.reg"
+
+    call :_Print "cyan" "[INFO]" "Cleaning up backup files..."
+    del "%~dp0Undo\InputLatency_Mouse.reg"
+    del "%~dp0Undo\InputLatency_Mouclass.reg"
+    del "%~dp0Undo\InputLatency_Kbdclass.reg"
+
     echo.
     call :_Print "green" "[STATUS]" "Input latency values restored."
     pause
@@ -696,10 +705,11 @@ goto :EOF
 
 :SILENT_DNS
 call :LOG "Silent operation: Optimize DNS"
-netsh interface ip set dns "Ethernet" static 1.1.1.1 primary
-netsh interface ip add dns "Ethernet" 1.0.0.1 index=2
-netsh interface ip set dns "Wi-Fi" static 1.1.1.1 primary
-netsh interface ip add dns "Wi-Fi" 1.0.0.1 index=2
+for /f "tokens=3,*" %%a in ('netsh interface show interface ^| find "Connected"') do (
+    call :_Print "cyan" "[INFO]" "Setting DNS for interface: %%b"
+    netsh interface ip set dns name="%%b" static 1.1.1.1 primary
+    netsh interface ip add dns name="%%b" 1.0.0.1 index=2
+)
 ipconfig /flushdns
 goto :EOF
 

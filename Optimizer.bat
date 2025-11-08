@@ -112,8 +112,12 @@ if "!choice!"=="1" call :NET
 if "!choice!"=="2" call :CLEAN
 if "!choice!"=="3" call :CLEANX
 if "!choice!"=="4" call :JUNK
-if "!choice!"=="5" powershell -ExecutionPolicy Bypass -File "%UNDO%\Debloater.ps1"
-if "!choice!"=="6" powershell -ExecutionPolicy Bypass -File "%UNDO%\DNS.ps1"
+if "!choice!"=="5" call :ACTION_DEBLOAT
+if "!choice!"=="6" (
+    powershell -ExecutionPolicy Bypass -File "%UNDO%\DNS.ps1"
+    if !errorlevel! neq 0 echo [ERROR] DNS script failed.
+    pause
+)
 if "!choice!"=="7" call :SERV
 if "!choice!"=="8" call :GAMEMODE
 if "!choice!"=="9" call :ADVANCED
@@ -131,15 +135,14 @@ goto MENU
 :: =============================================================================
 
 :NET
-cls
-call :LOG "Selected option: 1 - Optimize Network"
-call :progress "Optimizing Network"
+cls & echo [INFO] Network optimization...
 netsh int tcp set global autotuninglevel=normal >nul 2>&1
+if !errorlevel! neq 0 echo [ERROR] Failed to set autotuninglevel.
 netsh int tcp set global congestionprovider=ctcp >nul 2>&1
+if !errorlevel! neq 0 echo [ERROR] Failed to set congestionprovider.
 netsh int tcp set global fastopen=enabled >nul 2>&1
-echo.
-call :_Print "green" "[STATUS]" "Network optimization complete!"
-pause & goto :EOF
+if !errorlevel! neq 0 echo [ERROR] Failed to set fastopen.
+echo [OK] Complete! & pause & goto :EOF
 
 :CLEAN
 cls
@@ -192,6 +195,60 @@ echo.
 call :_Print "green" "[STATUS]" "Deep junk removed."
 pause & goto :EOF
 
+:ACTION_DEBLOAT
+cls
+call :LOG "Selected option: 5 - Windows Debloater"
+:DEBLOAT_MENU
+cls
+echo.
+echo ===========================================
+echo Windows Debloater
+echo ===========================================
+echo.
+echo [1] Recommended Debloat (Removes common bloatware)
+echo [2] Custom Debloat (Choose which apps to remove)
+echo [0] Back to Main Menu
+echo.
+set /p debloat_choice="Select an option: "
+if /i "!debloat_choice!"=="1" goto DEBLOAT_RECOMMENDED
+if /i "!debloat_choice!"=="2" goto DEBLOAT_CUSTOM
+if /i "!debloat_choice!"=="0" goto :EOF
+goto DEBLOAT_MENU
+
+:DEBLOAT_RECOMMENDED
+cls
+call :LOG "Selected Debloater option: Recommended"
+echo [WARNING] This will remove a list of common bloatware apps.
+set /p confirm="Are you sure you want to continue? (Y/N): "
+if /i not "!confirm!"=="Y" goto DEBLOAT_MENU
+powershell -ExecutionPolicy Bypass -File "%UNDO%\Debloater.ps1"
+if !errorlevel! neq 0 echo [ERROR] Debloater script failed.
+pause
+goto DEBLOAT_MENU
+
+:DEBLOAT_CUSTOM
+cls
+call :LOG "Selected Debloater option: Custom"
+echo [WARNING] This will allow you to select and remove specific Microsoft Store apps.
+set /p confirm="Are you sure you want to continue? (Y/N): "
+if /i not "!confirm!"=="Y" goto DEBLOAT_MENU
+
+:DEBLOAT_CUSTOM_LOOP
+cls
+echo [INFO] Loading list of installed apps...
+powershell.exe -ExecutionPolicy Bypass -Command "Get-AppxPackage | Select-Object -Property Name, PackageFullName | Format-Table -AutoSize"
+echo.
+set /p app_name="Enter the full or partial name of the app to remove (or type 'exit' to return): "
+if /i "!app_name!"=="exit" goto DEBLOAT_MENU
+
+powershell.exe -ExecutionPolicy Bypass -Command "Get-AppxPackage *!app_name!* | Remove-AppxPackage"
+if !errorlevel! neq 0 echo [ERROR] Failed to remove app.
+call :LOG "Removed AppX Package: !app_name!"
+echo.
+echo [INFO] App removed. You can remove another or type 'exit'.
+pause
+goto DEBLOAT_CUSTOM_LOOP
+
 :SERV
 cls
 echo.
@@ -218,9 +275,11 @@ for %%s in (!list!) do (
 echo [INFO] Disabling %%s...
 reg export "HKLM\SYSTEM\CurrentControlSet\Services\%%s" "%UNDO%\Services_Backup_%%s.reg" /y
 sc config "%%s" start=disabled >nul 2>&1
+if !errorlevel! neq 0 echo [ERROR] Failed to disable %%s.
 sc stop "%%s" >nul 2>&1
 )
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f >nul
+if !errorlevel! neq 0 echo [ERROR] Failed to disable telemetry.
 echo [OK] Disabled! Restart required. & pause & goto :EOF
 )
 
@@ -248,12 +307,22 @@ reg export "HKLM\SYSTEM\CurrentControlSet\Control\Power\User\Settings" "%UNDO%\G
 reg export "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" "%UNDO%\GameMode_Multimedia.reg" /y
 reg export "HKCU\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" "%UNDO%\GameMode_BackgroundApps.reg" /y
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Power\User\Settings" /v GameMode /t REG_DWORD /d 1 /f >nul
+if !errorlevel! neq 0 echo [ERROR] Failed to enable GameMode.
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "GPU Priority" /t REG_DWORD /d 8 /f >nul
+if !errorlevel! neq 0 echo [ERROR] Failed to set GPU Priority.
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "Priority" /t REG_DWORD /d 6 /f >nul
+if !errorlevel! neq 0 echo [ERROR] Failed to set Priority.
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "Scheduling Category" /t REG_SZ /d High /f >nul
+if !errorlevel! neq 0 echo [ERROR] Failed to set Scheduling Category.
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "SFIO Priority" /t REG_SZ /d High /f >nul
+if !errorlevel! neq 0 echo [ERROR] Failed to set SFIO Priority.
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" /v GlobalUserDisabled /t REG_DWORD /d 1 /f >nul
-powercfg /setactive scheme_max >nul 2>&1
+if !errorlevel! neq 0 echo [ERROR] Failed to disable background apps.
+powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61 >nul 2>&1
+if !errorlevel! neq 0 (
+    powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c >nul 2>&1
+    if !errorlevel! neq 0 echo [ERROR] Failed to set power scheme.
+)
 echo [OK] Applied! Restart required. & pause & goto :EOF
 
 :ADVANCED
